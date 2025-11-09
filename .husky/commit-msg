@@ -1,0 +1,4 @@
+echo "Running commitlint..."
+bun commit-check ${1}
+
+echo "Commit-msg checks passed! 🎉"

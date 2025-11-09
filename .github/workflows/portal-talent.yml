@@ -1,0 +1,44 @@
+name: Deploy Portal Talent
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/portal-talent/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./apps/portal-talent
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/sowira-ai-portal-talent:${{ github.sha }}
+
+      - name: 'Login to Azure'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Deploy to Azure Web App'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'sowira-ai-portal-talent'
+          images: '${{ secrets.DOCKERHUB_USERNAME }}/sowira-ai-portal-talent:${{ github.sha }}'
+
+      - name: 'Logout from Azure'
+        run: |
+          az logout

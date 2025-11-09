@@ -1,0 +1,5 @@
+echo "Running biome checks..."
+bun run biome-check --write --unsafe
+bun run biome-check
+
+echo "Pre-commit checks passed! 🎉"

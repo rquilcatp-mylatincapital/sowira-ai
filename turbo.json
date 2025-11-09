@@ -1,0 +1,64 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalDependencies": [".env"],
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": [
+    "AWS_ACCESS_KEY_ID",
+    "AWS_DEFAULT_REGION",
+    "AWS_REGION",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN"
+  ],
+  "tasks": {
+    "deploy": {
+      "dependsOn": ["^deploy"],
+      "outputs": ["cdk.out/**"]
+    },
+    "destroy": {
+      "cache": false
+    },
+    "bootstrap": {
+      "outputs": ["cdk.out/**"]
+    },
+    "synth": {
+      "outputs": ["cdk.out/**"]
+    },
+    "diff": {
+      "outputs": ["cdk.out/**"],
+      "cache": false
+    },
+    "biome-check": {
+      "command": "biome check .",
+      "outputs": []
+    },
+    "biome-check:fix": {
+      "command": "biome check . --write --unsafe",
+      "outputs": [],
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "outputs": []
+    },
+    "sync": {
+      "dependsOn": ["^sync"],
+      "cache": false
+    },
+    "clean": {
+      "dependsOn": ["^clean"],
+      "cache": false
+    },
+    "format-and-lint": {
+      "dependsOn": ["biome-check", "typecheck"],
+      "outputs": []
+    },
+    "format-and-lint:fix": {
+      "dependsOn": ["biome-check:fix"],
+      "outputs": []
+    }
+  }
+}
