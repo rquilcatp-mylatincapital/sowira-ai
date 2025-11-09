@@ -1,44 +1,72 @@
-name: Deploy Portal Backend
+name: Deploy Portal Backend to Azure Web App
 
 on:
   push:
     branches:
       - main
-      - develop
     paths:
       - 'apps/portal-backend/**'
+      - 'packages/ui/**'
+      - 'packages/tailwind-config/**'
+
+env:
+  ACR_LOGIN_SERVER: sowiraaicontainers.azurecr.io
+  AZURE_WEBAPP_NAME: sowira-ai-portal-api
+  AZURE_WEBAPP_PACKAGE_PATH: 'apps/portal-backend'
+  NODE_VERSION: '20-slim'
+  BUN_VERSION: '1.3.2'
+  IMAGE_NAME: portal-api
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          context: ./apps/portal-backend
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/sowira-ai-portal-api:${{ github.sha }}
+          bun-version: ${{ env.BUN_VERSION }}
 
-      - name: 'Login to Azure'
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build package ui
+        run: bun --filter=@sowira/ui run build
+
+      - name: Build portal backend
+        run: bun --filter=@sowira/portal-backend run build
+
+      - name: Login to Azure for Auth
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }} \
+            -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.AZURE_WEBAPP_NAME }}:${{ github.sha }} \
+            -f ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/Dockerfile \
+            .
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.AZURE_WEBAPP_NAME }}:${{ github.sha }}
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'sowira-ai-portal-api'
-          images: '${{ secrets.DOCKERHUB_USERNAME }}/sowira-ai-portal-api:${{ github.sha }}'
-
-      - name: 'Logout from Azure'
-        run: |
-          az logout
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          images: '${{ env.ACR_LOGIN_SERVER }}/${{ env.AZURE_WEBAPP_NAME }}:${{ github.sha }}'
