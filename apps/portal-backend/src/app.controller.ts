@@ -12,6 +12,6 @@ export class AppController {
 
   @Get("/test")
   getTest(): string {
-    return "This is a test endpoint V2";
+    return "This is a test endpoint V3";
   }
 }
