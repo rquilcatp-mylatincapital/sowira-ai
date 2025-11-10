@@ -1,5 +1,5 @@
 {
-  "name": "portal-talent",
+  "name": "@sowira/portal-talent",
   "version": "0.1.0",
   "private": true,
   "scripts": {
