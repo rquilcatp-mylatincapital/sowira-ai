@@ -37,3 +37,8 @@ yarn-error.log*
 # bun
 .bun
 bun.lockb
+
+# terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
