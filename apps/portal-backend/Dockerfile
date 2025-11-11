@@ -1,23 +1,15 @@
-# Dockerfile for portal-backend
-
-# Base image
-FROM node:20-slim AS base
+# 1. Builder stage
+FROM node:20-slim AS builder
 WORKDIR /app
-COPY package.json bun.lockb ./
-RUN bun install
-
-# Builder image
-FROM base AS builder
-WORKDIR /app
+RUN npm install -g bun
 COPY . .
-RUN bun run build
+RUN bun install --frozen-lockfile
+RUN bun --filter=@sowira/portal-backend run build
 
-# Production image
+# 2. Production stage
 FROM node:20-slim AS production
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
+COPY --from=builder /app .
+WORKDIR /app/apps/portal-backend
 EXPOSE 3000
 CMD ["node", "dist/main"]

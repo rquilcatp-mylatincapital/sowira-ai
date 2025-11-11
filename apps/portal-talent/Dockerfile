@@ -1,24 +1,10 @@
-# Dockerfile for portal-talent
-
-# Base image for building the frontend
-FROM node:20-slim AS base
+FROM node:20-slim
 WORKDIR /app
-COPY package.json bun.lockb ./
-RUN bun install
-
-# Builder image
-FROM base AS builder
-WORKDIR /app
+RUN npm install -g bun
 COPY . .
-RUN bun run build
-
-# Production image
-FROM node:20-slim AS production
-WORKDIR /app
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
+RUN bun install --frozen-lockfile
+RUN bun --filter=@sowira/portal-talent run build
+WORKDIR /app/apps/portal-talent
 EXPOSE 3000
 CMD ["bun", "start"]
+
