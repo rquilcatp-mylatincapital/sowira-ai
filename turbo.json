@@ -28,12 +28,14 @@
       "outputs": ["cdk.out/**"],
       "cache": false
     },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
     "biome-check": {
-      "command": "biome check .",
       "outputs": []
     },
     "biome-check:fix": {
-      "command": "biome check . --write --unsafe",
       "outputs": [],
       "cache": false
     },

@@ -41,4 +41,4 @@ bun.lockb
 # terraform
 .terraform/
 *.tfstate
-*.tfstate.backup
+*.tfstate.backup\n# Backend build output\n/apps/portal-backend/dist
